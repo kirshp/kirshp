@@ -38,4 +38,4 @@ shout them. Not a trading terminal — a viewer and a study aid.
 - **Fresh by itself** — parsers + GitHub Actions keep it current with zero manual work
 - No accounts, no ads, no tracking — the apps collect nothing
 
-📫 aurapark888@gmail.com
+📫 kirill@shpara.com
