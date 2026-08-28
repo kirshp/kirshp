@@ -13,7 +13,8 @@
 
 ## Do not touch (macOS cleanup)
 Never remove, disable, or suggest removing these — they are actively used:
-- **Blender** (all versions) — 3D and animation work.
+- **Blender** — keep EVERY installed version, including older ones. Do not offer to
+  remove an "old" or duplicate Blender; the user has explicitly declined that.
 - **DaVinci Resolve** (including its built-in Fusion page) — video and VFX.
 
 Note: "Fusion" is ambiguous. Autodesk Fusion (CAD) was approved for removal;
