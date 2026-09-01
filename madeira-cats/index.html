@@ -1,4 +1,4 @@
-<title>Коты Мадейры</title>
+<title>Madeira Cats</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
 <style>
   :root{
@@ -85,10 +85,10 @@
 
 <div id="wrap">
   <div id="hud">
-    <span id="lvName" class="ps">КОТЫ МАДЕЙРЫ</span>
+    <span id="lvName" class="ps">MADEIRA CATS</span>
     <span id="score" class="ps">0</span>
     <span id="lives" class="ps">♥9</span>
-    <button id="mute" title="Звук">♪</button>
+    <button id="mute" title="Sound">♪</button>
   </div>
   <div id="cheat"></div>
   <div id="stage">
@@ -98,16 +98,16 @@
     <div id="screen"></div>
   </div>
   <div id="controls">
-    <button id="btnIn">В ДОМ</button>
-    <button id="btnPeek">МОИ<br>КОТЫ</button>
-    <button id="btnOut">КЫШ!</button>
+    <button id="btnIn">LET IN</button>
+    <button id="btnPeek">MY<br>CATS</button>
+    <button id="btnOut">SHOO!</button>
   </div>
-  <div id="hint">свайп влево — в дом · вправо — кыш · держите «мои коты» для подсказки</div>
+  <div id="hint">swipe left — let in · right — shoo · hold MY CATS for a hint</div>
 </div>
 
 <script>
 'use strict';
-// ————— утилиты —————
+// ————— helpers —————
 const $ = id => document.getElementById(id);
 const rnd = a => a[Math.floor(Math.random()*a.length)];
 const store = {
@@ -115,7 +115,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem('mc_'+k, JSON.stringify(v)); }catch(e){} }
 };
 
-// ————— звук —————
+// ————— sound —————
 let actx=null, muted=false;
 function beep(f0,f1,dur,type,vol){
   if(muted) return;
@@ -134,12 +134,12 @@ const sndBad  = ()=>{ beep(220,120,0.28,'sawtooth',0.05); };
 const sndTick = ()=>{ beep(880,880,0.03,'square',0.02); };
 $('mute').addEventListener('click',()=>{ muted=!muted; $('mute').textContent = muted?'✕':'♪'; });
 
-// ————— коты: генерация и спрайт —————
+// ————— cats: generation and sprite —————
 const BASES   = ['#e8a04c','#8a8f98','#3b3630','#f2ead8','#a9704a','#d8b98f'];
 const LUM     = BASES.map(h=>{const n=parseInt(h.slice(1),16);return ((n>>16&255)*.3+(n>>8&255)*.6+(n&255)*.1)/255;});
 const PATS    = ['solid','tabby','patch','socks','tailtip'];
 const EYES    = ['#5fbf4a','#4aa0bf','#e8c04c','#c96a2e'];
-const NAMES   = ['Барсик','Муся','Рыжик','Соня','Персик','Тиша','Клёпа','Багира'];
+const NAMES   = ['Ginger','Luna','Biscuit','Pepper','Mango','Smokey','Olive','Bagheera'];
 
 function pickPatColor(baseIdx){
   const opts=[];
@@ -159,24 +159,24 @@ function catDiff(a,b){
   if(a.eye!==b.eye) d++;
   return d;
 }
-// клон «своего» кота с одним заметным отличием
+// clone of one of your cats with a single visible difference
 function makeImpostor(own){
   const c = {...own};
   const roll = Math.random();
-  if(roll<0.45){ // другой окрас
+  if(roll<0.45){ // different coat
     let nb; do{ nb=Math.floor(Math.random()*BASES.length); }while(nb===c.base || Math.abs(LUM[nb]-LUM[c.base])<0.12);
     c.base=nb; if(c.pat!=='solid' && Math.abs(LUM[c.patColor]-LUM[nb])<0.2) c.patColor=pickPatColor(nb);
-  } else if(roll<0.85){ // другой узор
+  } else if(roll<0.85){ // different pattern
     let np; do{ np=rnd(PATS); }while(np===c.pat);
     c.pat=np; c.patColor = np==='solid' ? c.base : pickPatColor(c.base);
-  } else { // другие глаза
+  } else { // different eyes
     let ne; do{ ne=Math.floor(Math.random()*EYES.length); }while(ne===c.eye);
     c.eye=ne;
   }
   return c;
 }
 
-// спрайт 16×12, смотрит влево
+// 16×12 sprite, facing left
 const TAIL_A=[[13,4],[14,3],[14,2]], TAIL_B=[[13,4],[14,4],[15,3]];
 const PAT_PIX={
   solid:[],
@@ -184,24 +184,24 @@ const PAT_PIX={
   patch:[[8,5],[9,5],[10,5],[8,6],[9,6],[10,6],[9,7],[3,2],[4,2],[4,3]],
   socks:[], tailtip:[]
 };
-let frameEyes=[]; // для ночного свечения глаз
+let frameEyes=[]; // for the night eye glow
 function drawCat(ctx,cat,x,y,ps,step,flip,recordEyes){
   const px=(cx,cy,c)=>{ if(flip) cx=15-cx; ctx.fillStyle=c; ctx.fillRect(x+cx*ps,y+cy*ps,ps,ps); };
   const base=BASES[cat.base], pc=BASES[cat.patColor];
   const tail = (step===1)?TAIL_B:TAIL_A;
   const legsX = step==null ? [5,12] : (step===1 ? [6,11] : [5,12]);
-  // тело и голова
+  // body and head
   for(let cx=4;cx<=13;cx++) for(let cy=5;cy<=9;cy++) px(cx,cy,base);
   for(let cx=0;cx<=4;cx++) for(let cy=2;cy<=6;cy++) px(cx,cy,base);
-  px(0,1,base); px(4,1,base);                       // уши
-  tail.forEach(p=>px(p[0],p[1],base));              // хвост
+  px(0,1,base); px(4,1,base);                       // ears
+  tail.forEach(p=>px(p[0],p[1],base));              // tail
   const legCol = cat.pat==='socks' ? pc : base;
   legsX.forEach(lx=>{ px(lx,10,legCol); px(lx,11,legCol); });
-  // узор
+  // pattern
   PAT_PIX[cat.pat].forEach(p=>px(p[0],p[1],pc));
   if(cat.pat==='tailtip'){ px(tail[1][0],tail[1][1],pc); px(tail[2][0],tail[2][1],pc); px(0,1,pc); px(4,1,pc); }
   if(cat.pat==='socks'){ px(tail[2][0],tail[2][1],pc); }
-  // морда
+  // face
   px(1,4,EYES[cat.eye]); px(2,4,EYES[cat.eye]);
   px(0,5,'#d97b8a');
   if(recordEyes){
@@ -220,27 +220,27 @@ function portraitEl(cat,name){
   return d;
 }
 
-// ————— уровни —————
+// ————— levels —————
 const LEVELS=[
-  {name:'1·НОВЫЙ ДОМ', env:'day', own:2, total:8,  speed:34, time:6.0, tricky:0,    cheat:true,
-   story:'Вы переехали на Мадейру — дом с зелёной дверью, океан за окном. Коты ещё осваиваются, и вы тоже: подсказка с вашими котами будет над экраном.'},
-  {name:'2·КОТЫ РАЙОНА', env:'day', own:2, total:10, speed:40, time:5.0, tricky:0.15,
-   story:'Соседские коты прознали, что у вас щедро насыпают корм. Подсказки больше нет — только память. Запомните своих!'},
-  {name:'3·СИЕСТА ВСЁ', env:'dusk', own:3, total:12, speed:46, time:4.2, tricky:0.35,
-   story:'Вечереет, у двери очередь. У вас теперь три кота, а среди чужих попадаются подозрительно похожие на ваших.'},
-  {name:'4·ДОЖДЬ', env:'rain', own:3, total:14, speed:52, time:3.6, tricky:0.5,
-   story:'Атлантика прислала ливень. К вашей двери бегут все коты улицы — решайте быстрее.'},
-  {name:'5·НОЧЬ', env:'night', own:3, total:14, speed:56, time:3.4, tricky:0.6,
-   story:'Фонарь у двери да кошачьи глаза — больше света нет. Узнаете своих в темноте?'},
-  {name:'ПОТОК', env:'cycle', own:3, total:Infinity, speed:44, time:4.2, tricky:0.3, endless:true,
-   story:'Коты идут и идут, погода меняется. Сколько продержитесь на девяти жизнях?'}
+  {name:'1·NEW HOME', env:'day', own:2, total:8,  speed:34, time:6.0, tricky:0,    cheat:true,
+   story:'You’ve just moved to Madeira — a house with a green door, the ocean out the window. Your cats are still settling in, and so are you: a cheat sheet with your cats stays on screen.'},
+  {name:'2·WORD GOT OUT', env:'day', own:2, total:10, speed:40, time:5.0, tricky:0.15,
+   story:'The neighbourhood cats found out you’re generous with the food bowl. No cheat sheet anymore — memory only. Study your cats!'},
+  {name:'3·SIESTA’S OVER', env:'dusk', own:3, total:12, speed:46, time:4.2, tricky:0.35,
+   story:'Evening comes and a queue forms at the door. You have three cats now — and some strangers look suspiciously like yours.'},
+  {name:'4·ATLANTIC RAIN', env:'rain', own:3, total:14, speed:52, time:3.6, tricky:0.5,
+   story:'The Atlantic sent a downpour. Every cat on the street is running for your door — decide fast.'},
+  {name:'5·MADEIRA NIGHT', env:'night', own:3, total:14, speed:56, time:3.4, tricky:0.6,
+   story:'A lantern by the door and cats’ eyes — that’s all the light there is. Can you tell yours in the dark?'},
+  {name:'CAT TIDE', env:'cycle', own:3, total:Infinity, speed:44, time:4.2, tricky:0.3, endless:true,
+   story:'Cats keep coming and the weather keeps turning. How long can you last on nine lives?'}
 ];
 const ENV_CYCLE=['day','dusk','rain','night'];
 
-// ————— состояние —————
+// ————— state —————
 const cv=$('cv'), ctx=cv.getContext('2d');
 const W=160,H=150,GROUND=120,SIT_X=58,PS=2;
-let G=null; // текущий забег
+let G=null; // current run
 
 function newRun(levelIdx){
   const owns=[]; const names=[...NAMES];
@@ -257,7 +257,7 @@ function newRun(levelIdx){
 function lv(){ return LEVELS[G.level]; }
 function ownCatsForLevel(){ return G.owns.slice(0, lv().own); }
 
-// сложность в «Потоке»
+// difficulty ramp in CAT TIDE
 function curSpeed(){ const l=lv(); return l.endless ? l.speed + Math.floor(G.served/5)*3 : l.speed; }
 function curTime(){  const l=lv(); return l.endless ? Math.max(2.0, l.time*Math.pow(0.96,Math.floor(G.served/5))) : l.time; }
 function curTricky(){const l=lv(); return l.endless ? Math.min(0.65, l.tricky + G.served*0.005) : l.tricky; }
@@ -284,23 +284,23 @@ function toast(msg,bad){
   clearTimeout(toastTm); toastTm=setTimeout(()=>t.classList.remove('show'),1400);
 }
 
-// ————— экраны —————
+// ————— screens —————
 function showScreen(html){ const s=$('screen'); s.innerHTML=html; s.classList.remove('hide'); setControls(false); }
 function hideScreen(){ $('screen').classList.add('hide'); }
 function setControls(on){ $('btnIn').disabled=!on; $('btnOut').disabled=!on; }
 
 function titleScreen(){
   G=null;
-  $('lvName').textContent='КОТЫ МАДЕЙРЫ'; $('score').textContent=store.get('best',0); $('lives').textContent='♥9';
+  $('lvName').textContent='MADEIRA CATS'; $('score').textContent=store.get('best',0); $('lives').textContent='♥9';
   $('cheat').classList.remove('on');
   const unlocked=Math.min(store.get('unlocked',0), LEVELS.length-1);
   showScreen(`
-    <h1>КОТЫ МАДЕЙРЫ</h1>
-    <p class="dim">Впусти своих — прогони чужих</p>
-    <p class="dim">Лучший счёт: ${store.get('best',0)}</p>
-    <button class="btn gold" id="bPlay">ИГРАТЬ · УР.${Math.min(unlocked,4)+1}</button>
-    ${unlocked>0?'<button class="btn" id="bNew">С НАЧАЛА</button>':''}
-    ${store.get('unlocked',0)>=5?'<button class="btn" id="bFlow">ПОТОК</button>':''}
+    <h1>MADEIRA CATS</h1>
+    <p class="dim">Let yours in — shoo the strangers</p>
+    <p class="dim">Best score: ${store.get('best',0)}</p>
+    <button class="btn gold" id="bPlay">PLAY · LV.${Math.min(unlocked,4)+1}</button>
+    ${unlocked>0?'<button class="btn" id="bNew">FROM START</button>':''}
+    ${store.get('unlocked',0)>=5?'<button class="btn" id="bFlow">CAT TIDE</button>':''}
   `);
   $('bPlay').onclick=()=>{ newRun(Math.min(unlocked,4)); storyScreen(); };
   const bn=$('bNew');  if(bn) bn.onclick=()=>{ newRun(0); storyScreen(); };
@@ -308,13 +308,12 @@ function titleScreen(){
 }
 function storyScreen(){
   updHud(); updCheat(false);
-  const ports = ownCatsForLevel().map(()=>'').join('');
   showScreen(`
     <h2>${lv().name}</h2>
     <p>${lv().story}</p>
-    <p class="dim">Ваши коты — запомните их:</p>
+    <p class="dim">Your cats — remember them:</p>
     <div class="ports" id="sPorts"></div>
-    <button class="btn gold" id="bGo">ПОЕХАЛИ</button>
+    <button class="btn gold" id="bGo">LET’S GO</button>
   `);
   const box=$('sPorts');
   ownCatsForLevel().forEach(c=>box.appendChild(portraitEl(c,c.name)));
@@ -333,19 +332,19 @@ function levelComplete(){
   store.set('unlocked', Math.max(store.get('unlocked',0), next));
   if(G.level===4){
     showScreen(`
-      <h2>МАДЕЙРА — ДОМ!</h2>
-      <p>Вы освоились. Свои — дома, чужие уважительно обходят вашу дверь. Впереди — бесконечный «Поток».</p>
-      <p class="dim">Счёт: ${G.score} · верных ${G.correct}/${lv().total}</p>
-      <button class="btn gold" id="bNext">В ПОТОК</button>
-      <button class="btn" id="bMenu">В МЕНЮ</button>
+      <h2>MADEIRA IS HOME!</h2>
+      <p>You’ve settled in. Your cats are home, and the strangers give your door a respectful distance. Ahead — the endless Cat Tide.</p>
+      <p class="dim">Score: ${G.score} · right calls ${G.correct}/${lv().total}</p>
+      <button class="btn gold" id="bNext">CAT TIDE</button>
+      <button class="btn" id="bMenu">MENU</button>
     `);
     $('bNext').onclick=()=>{ G.level=5; storyScreen(); };
     $('bMenu').onclick=titleScreen;
   } else {
     showScreen(`
-      <h2>УРОВЕНЬ ПРОЙДЕН!</h2>
-      <p class="dim">Верных решений: ${G.correct} из ${lv().total}<br>Счёт: ${G.score} · Жизни: ♥${G.lives}</p>
-      <button class="btn gold" id="bNext">ДАЛЬШЕ</button>
+      <h2>LEVEL CLEAR!</h2>
+      <p class="dim">Right calls: ${G.correct} of ${lv().total}<br>Score: ${G.score} · Lives: ♥${G.lives}</p>
+      <button class="btn gold" id="bNext">NEXT</button>
     `);
     $('bNext').onclick=()=>{ G.level=next; storyScreen(); };
   }
@@ -353,17 +352,17 @@ function levelComplete(){
 function gameOver(){
   if(G.score>store.get('best',0)) store.set('best',G.score);
   showScreen(`
-    <h2>ДЕВЯТЬ ЖИЗНЕЙ — ВСЁ</h2>
-    <p>Дом полон чужих котов, корм кончился, ваши обиженно сидят на заборе.</p>
-    <p class="dim">Счёт: ${G.score}</p>
-    <button class="btn gold" id="bRetry">ЕЩЁ РАЗ</button>
-    <button class="btn" id="bMenu">В МЕНЮ</button>
+    <h2>NINE LIVES SPENT</h2>
+    <p>The house is full of stranger cats, the food is gone, and yours sit sulking on the fence.</p>
+    <p class="dim">Score: ${G.score}</p>
+    <button class="btn gold" id="bRetry">TRY AGAIN</button>
+    <button class="btn" id="bMenu">MENU</button>
   `);
   $('bRetry').onclick=()=>{ G.lives=9; G.score=G.levelStartScore; storyScreen(); };
   $('bMenu').onclick=titleScreen;
 }
 
-// ————— игровой цикл —————
+// ————— game loop —————
 function spawnNext(){
   if(!G || G.phase==='dead') return;
   const l=lv();
@@ -383,9 +382,9 @@ function spawnNext(){
   cat.x=170; cat.y=GROUND-24;
   G.cat=cat; G.phase='walk'; G.timer=curTime();
 }
-function resolve(action){ // 'in' | 'out' | null(таймаут)
+function resolve(action){ // 'in' | 'out' | null (timeout)
   if(!G.cat || (G.phase!=='walk' && G.phase!=='sit')) return;
-  const c=G.cat, l=lv();
+  const c=G.cat;
   let correct, entered;
   if(action===null){ correct=false; entered=!c.isOwn; }
   else { correct = (action==='in')===c.isOwn; entered=(action==='in'); }
@@ -394,13 +393,13 @@ function resolve(action){ // 'in' | 'out' | null(таймаут)
     G.combo++; G.correct++;
     const pts=10*Math.min(G.combo,5);
     G.score+=pts;
-    if(c.isOwn){ toast(`${c.name} дома! +${pts}`); sndMeow(); }
-    else       { toast(`Кыш, чужак! +${pts}`); sndGood(); }
+    if(c.isOwn){ toast(`${c.name} is home! +${pts}`); sndMeow(); }
+    else       { toast(`Shoo! Stranger chased off +${pts}`); sndGood(); }
   } else {
     G.combo=0; G.lives--; G.shake=6; sndBad();
-    if(action===null) toast(c.isOwn?`${c.name} не дождался и ушёл… −♥`:'Прошмыгнул, пока вы думали! −♥', true);
-    else if(entered)  toast('Это чужой! Съел весь корм… −♥', true);
-    else              toast(`Вы прогнали ${c.name}! Обида… −♥`, true);
+    if(action===null) toast(c.isOwn?`${c.name} gave up and left… −♥`:'Slipped in while you hesitated! −♥', true);
+    else if(entered)  toast('That’s a stranger! Ate all the food… −♥', true);
+    else              toast(`You shooed ${c.name}! So offended… −♥`, true);
   }
   updHud();
   G.phase = entered ? 'leaveIn' : 'leaveOut';
@@ -412,66 +411,65 @@ function afterLeave(){
   setTimeout(spawnNext, 400);
 }
 
-// ————— отрисовка —————
+// ————— rendering —————
 const SKY={ day:['#8fd3ea','#a5deef','#c0eaf5'], dusk:['#e8845e','#f2a65e','#f5c37a'],
             rain:['#8d9aa8','#9daab6','#adb9c4'], night:['#141a33','#1a2140','#222a4d'] };
 const STARS=[[70,6],[95,14],[120,4],[140,18],[85,26],[110,30],[150,9],[64,20],[131,24]];
 function drawScene(t,env){
-  // небо
+  // sky
   const s=SKY[env];
   ctx.fillStyle=s[0]; ctx.fillRect(0,0,W,18);
   ctx.fillStyle=s[1]; ctx.fillRect(0,18,W,16);
   ctx.fillStyle=s[2]; ctx.fillRect(0,34,W,14);
   if(env==='night'){ ctx.fillStyle='#e8e4d0'; STARS.forEach(p=>ctx.fillRect(p[0],p[1],1,1)); }
   if(env==='day'){ ctx.fillStyle='#f5e08a'; ctx.fillRect(128,8,10,10); ctx.fillStyle='#f9edb2'; ctx.fillRect(130,10,6,6); }
-  // океан и гора
+  // ocean and hills
   ctx.fillStyle= env==='night'?'#16294a':'#2a7096'; ctx.fillRect(0,48,W,14);
   ctx.fillStyle= env==='night'?'#1b3055':'#3585ad'; ctx.fillRect(0,48,W,4);
   ctx.fillStyle= env==='night'?'#20304a':'#4e9b47';
   ctx.fillRect(96,38,64,10); ctx.fillRect(110,32,40,6); ctx.fillRect(122,27,20,5);
-  // волны
+  // waves
   ctx.fillStyle='rgba(255,255,255,.5)';
   for(let i=0;i<6;i++){ const wx=(i*32 + Math.floor(t*8))% (W+20) -10; ctx.fillRect(wx,52+(i%3)*4,8,1); }
-  // терраса
+  // terrace
   ctx.fillStyle='#b7a98f'; ctx.fillRect(0,62,W,88);
   ctx.fillStyle='#a3957c';
   for(let gy=66;gy<150;gy+=8) for(let gx=(gy/8)%2?4:0; gx<W; gx+=8) ctx.fillRect(gx,gy,4,1);
-  // дом
-  ctx.fillStyle='#f2e7d5'; ctx.fillRect(0,30,54,90);   // стена
+  // house
+  ctx.fillStyle='#f2e7d5'; ctx.fillRect(0,30,54,90);   // wall
   ctx.fillStyle='#e5d8c2'; ctx.fillRect(50,30,4,90);
-  ctx.fillStyle='#c4623b'; ctx.fillRect(0,22,58,10);   // крыша
+  ctx.fillStyle='#c4623b'; ctx.fillRect(0,22,58,10);   // roof
   ctx.fillStyle='#a34c2c'; for(let rx=0;rx<58;rx+=6) ctx.fillRect(rx,28,3,4);
-  // дверь (зелёная) / проём
+  // the green door / open doorway
   if(G && G.doorOpen){ ctx.fillStyle='#241d18'; ctx.fillRect(14,70,26,50); }
   else{
     ctx.fillStyle='#3e7d38'; ctx.fillRect(14,70,26,50);
     ctx.fillStyle='#356b30'; ctx.fillRect(16,74,9,20); ctx.fillRect(29,74,9,20);
     ctx.fillRect(16,98,9,18); ctx.fillRect(29,98,9,18);
-    ctx.fillStyle='#e8c04c'; ctx.fillRect(35,96,2,3); // ручка
+    ctx.fillStyle='#e8c04c'; ctx.fillRect(35,96,2,3); // handle
   }
-  ctx.fillStyle='#8a6f4d'; ctx.fillRect(12,68,2,52); ctx.fillRect(40,68,2,52); ctx.fillRect(12,68,30,2); // косяк
-  ctx.fillStyle='#4aa0bf'; for(let ay=72;ay<118;ay+=6){ ctx.fillRect(10,ay,2,3); ctx.fillRect(42,ay,2,3); } // азулежу
-  // фонарь
+  ctx.fillStyle='#8a6f4d'; ctx.fillRect(12,68,2,52); ctx.fillRect(40,68,2,52); ctx.fillRect(12,68,30,2); // frame
+  ctx.fillStyle='#4aa0bf'; for(let ay=72;ay<118;ay+=6){ ctx.fillRect(10,ay,2,3); ctx.fillRect(42,ay,2,3); } // azulejo trim
+  // lantern
   ctx.fillStyle='#3b3630'; ctx.fillRect(46,60,4,3); ctx.fillRect(47,58,2,2);
   ctx.fillStyle= (env==='night'||env==='dusk')?'#ffd964':'#c9bfa8'; ctx.fillRect(47,61,2,2);
-  // горшок с монстерой
+  // potted monstera
   ctx.fillStyle='#4e9b47'; ctx.fillRect(140,92,14,10); ctx.fillRect(144,86,8,8); ctx.fillRect(138,96,4,6);
   ctx.fillStyle='#33702e'; ctx.fillRect(146,90,4,8);
   ctx.fillStyle='#c4623b'; ctx.fillRect(140,102,14,12); ctx.fillStyle='#a34c2c'; ctx.fillRect(140,102,14,3);
-  // миска у двери
+  // food bowl by the door
   ctx.fillStyle='#4aa0bf'; ctx.fillRect(44,116,10,4); ctx.fillStyle='#8a6f4d'; ctx.fillRect(46,115,6,2);
 }
 function drawOverlays(env){
   if(env==='dusk'){ ctx.fillStyle='rgba(230,110,40,.16)'; ctx.fillRect(0,0,W,H); }
   if(env==='rain'){ ctx.fillStyle='rgba(90,110,135,.22)'; ctx.fillRect(0,0,W,H); }
   if(env==='night'){ ctx.fillStyle='rgba(10,10,38,.62)'; ctx.fillRect(0,0,W,H); }
-  if(env==='night'||env==='dusk'){ // свет фонаря
+  if(env==='night'||env==='dusk'){ // lantern light
     ctx.fillStyle='rgba(255,214,100,.14)'; ctx.fillRect(38,54,20,16);
     ctx.fillStyle='rgba(255,214,100,.08)'; ctx.fillRect(30,52,36,26);
   }
   if(env==='night'){ frameEyes.forEach(e=>{ ctx.fillStyle=e[3]; ctx.fillRect(e[0],e[1],e[2],e[2]); }); }
 }
-let rainT=0;
 function drawRain(t){
   ctx.strokeStyle='rgba(210,225,240,.55)'; ctx.lineWidth=1; ctx.beginPath();
   for(let i=0;i<34;i++){
@@ -515,7 +513,7 @@ function loop(ts){
       const bob=(G.phase==='sit')?0:(walkFrame?1:0);
       ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(c.x+6,c.y+24,22,2);
       drawCat(ctx,c,Math.round(c.x),c.y+bob,PS,step,G.phase==='leaveOut',true);
-      if(G.phase==='sit'){ // таймер
+      if(G.phase==='sit'){ // decision timer
         const frac=Math.max(0,G.timer/curTime());
         ctx.fillStyle='#241f31'; ctx.fillRect(c.x+2,c.y-8,28,4);
         ctx.fillStyle= frac>0.4?'#5fbf4a':(frac>0.2?'#e8c04c':'#e2688a');
@@ -529,7 +527,7 @@ function loop(ts){
   requestAnimationFrame(loop);
 }
 
-// ————— ввод —————
+// ————— input —————
 function act(a){ if(G && ($('screen').classList.contains('hide'))) resolve(a); }
 $('btnIn').addEventListener('pointerdown', e=>{ e.preventDefault(); act('in'); });
 $('btnOut').addEventListener('pointerdown', e=>{ e.preventDefault(); act('out'); });
@@ -552,7 +550,7 @@ window.addEventListener('keydown', e=>{
   else if(e.key==='ArrowRight') act('out');
 });
 
-// ————— старт —————
+// ————— boot —————
 setControls(false);
 if(location.hash==='#test'){ newRun(0); hideScreen(); startLevel(); }
 else titleScreen();
