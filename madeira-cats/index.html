@@ -1,0 +1,560 @@
+<title>Коты Мадейры</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+  :root{
+    --bg:#17141f; --panel:#241f31; --panel2:#2e2840; --line:#3a3450;
+    --ink:#f2ead8; --muted:#a89bb4; --sun:#e8c04c;
+    --green:#4e9b47; --green-d:#33702e; --red:#c4623b; --red-d:#8f4325;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--bg); color:var(--ink); margin:0; min-height:100vh;
+    font-family:"Pixelify Sans", "Courier New", monospace; font-size:19px;
+    display:flex; justify-content:center;
+  }
+  #wrap{width:100%; max-width:430px; padding:10px 10px 18px; display:flex; flex-direction:column; gap:8px;}
+  .ps{font-family:"Press Start 2P", "Courier New", monospace;}
+  #hud{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:var(--panel); border:3px solid var(--line); border-radius:6px; padding:8px 10px;
+    font-size:11px;
+  }
+  #hud .ps{font-size:10px;}
+  #lvName{color:var(--sun); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #score{color:var(--ink);}
+  #lives{color:#e2688a;}
+  #mute{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;}
+  #cheat{
+    display:none; gap:8px; justify-content:center; flex-wrap:wrap;
+    background:var(--panel); border:3px solid var(--line); border-radius:6px; padding:6px;
+  }
+  #cheat.on{display:flex;}
+  .port{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:15px; color:var(--muted);}
+  .port canvas{image-rendering:pixelated; width:64px; height:48px; background:#3a3450; border-radius:4px;}
+  #stage{
+    position:relative; border:4px solid var(--line); border-radius:8px; overflow:hidden;
+    background:#000; touch-action:none; user-select:none;
+  }
+  #cv{display:block; width:100%; image-rendering:pixelated;}
+  #toast{
+    position:absolute; left:0; right:0; top:12%; text-align:center; pointer-events:none;
+    font-size:20px; font-weight:600; color:var(--ink); text-shadow:0 2px 0 #000;
+    opacity:0; transition:opacity .15s;
+  }
+  #toast.bad{color:#ff9a7a;}
+  #toast.show{opacity:1;}
+  #combo{
+    position:absolute; right:8px; top:8px; pointer-events:none;
+    font-size:9px; color:var(--sun); text-shadow:0 2px 0 #000; opacity:0; transition:opacity .2s;
+  }
+  #combo.show{opacity:1;}
+  #screen{
+    position:absolute; inset:0; background:rgba(15,12,22,.88); padding:18px 16px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    text-align:center; overflow-y:auto;
+  }
+  #screen.hide{display:none;}
+  #screen h1{font-size:17px; line-height:1.7; margin:0; color:var(--sun); text-wrap:balance;}
+  #screen h2{font-size:12px; line-height:1.8; margin:0; color:var(--sun); text-wrap:balance;}
+  #screen p{margin:0; max-width:34ch; line-height:1.35; color:var(--ink);}
+  #screen .dim{color:var(--muted); font-size:16px;}
+  #screen .ports{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .btn{
+    font-family:"Press Start 2P", monospace; font-size:11px; color:var(--ink);
+    background:var(--panel2); border:3px solid var(--line); border-bottom-width:6px;
+    border-radius:8px; padding:13px 18px; cursor:pointer;
+  }
+  .btn:active{transform:translateY(2px); border-bottom-width:4px;}
+  .btn.gold{background:#6b5620; border-color:var(--sun); color:#ffe9a3;}
+  #controls{display:flex; gap:8px;}
+  #controls button{
+    flex:1; font-family:"Press Start 2P", monospace; font-size:12px; color:#fff;
+    border-radius:10px; padding:20px 6px; cursor:pointer; border:0;
+  }
+  #btnIn{background:var(--green); box-shadow:0 5px 0 var(--green-d);}
+  #btnOut{background:var(--red); box-shadow:0 5px 0 var(--red-d);}
+  #btnPeek{
+    flex:0 0 76px; background:var(--panel2); box-shadow:0 5px 0 #1a1626;
+    color:var(--muted); font-size:9px; line-height:1.5;
+  }
+  #controls button:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.4);}
+  #controls button:disabled{opacity:.45;}
+  #hint{color:var(--muted); font-size:15px; text-align:center;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+
+<div id="wrap">
+  <div id="hud">
+    <span id="lvName" class="ps">КОТЫ МАДЕЙРЫ</span>
+    <span id="score" class="ps">0</span>
+    <span id="lives" class="ps">♥9</span>
+    <button id="mute" title="Звук">♪</button>
+  </div>
+  <div id="cheat"></div>
+  <div id="stage">
+    <canvas id="cv" width="160" height="150"></canvas>
+    <div id="combo" class="ps"></div>
+    <div id="toast"></div>
+    <div id="screen"></div>
+  </div>
+  <div id="controls">
+    <button id="btnIn">В ДОМ</button>
+    <button id="btnPeek">МОИ<br>КОТЫ</button>
+    <button id="btnOut">КЫШ!</button>
+  </div>
+  <div id="hint">свайп влево — в дом · вправо — кыш · держите «мои коты» для подсказки</div>
+</div>
+
+<script>
+'use strict';
+// ————— утилиты —————
+const $ = id => document.getElementById(id);
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('mc_'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem('mc_'+k, JSON.stringify(v)); }catch(e){} }
+};
+
+// ————— звук —————
+let actx=null, muted=false;
+function beep(f0,f1,dur,type,vol){
+  if(muted) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+    o.type=type; o.frequency.setValueAtTime(f0,t);
+    o.frequency.linearRampToValueAtTime(f1,t+dur);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur);
+  }catch(e){}
+}
+const sndGood = ()=>{ beep(660,990,0.12,'square',0.04); };
+const sndMeow = ()=>{ beep(520,760,0.09,'square',0.045); setTimeout(()=>beep(700,430,0.14,'square',0.04),90); };
+const sndBad  = ()=>{ beep(220,120,0.28,'sawtooth',0.05); };
+const sndTick = ()=>{ beep(880,880,0.03,'square',0.02); };
+$('mute').addEventListener('click',()=>{ muted=!muted; $('mute').textContent = muted?'✕':'♪'; });
+
+// ————— коты: генерация и спрайт —————
+const BASES   = ['#e8a04c','#8a8f98','#3b3630','#f2ead8','#a9704a','#d8b98f'];
+const LUM     = BASES.map(h=>{const n=parseInt(h.slice(1),16);return ((n>>16&255)*.3+(n>>8&255)*.6+(n&255)*.1)/255;});
+const PATS    = ['solid','tabby','patch','socks','tailtip'];
+const EYES    = ['#5fbf4a','#4aa0bf','#e8c04c','#c96a2e'];
+const NAMES   = ['Барсик','Муся','Рыжик','Соня','Персик','Тиша','Клёпа','Багира'];
+
+function pickPatColor(baseIdx){
+  const opts=[];
+  for(let i=0;i<BASES.length;i++) if(i!==baseIdx && Math.abs(LUM[i]-LUM[baseIdx])>0.2) opts.push(i);
+  return rnd(opts);
+}
+function makeCat(){
+  const b = Math.floor(Math.random()*BASES.length);
+  const pat = rnd(PATS);
+  return { base:b, pat, patColor: pat==='solid' ? b : pickPatColor(b), eye: Math.floor(Math.random()*EYES.length) };
+}
+function catDiff(a,b){
+  let d=0;
+  if(a.base!==b.base) d++;
+  if(a.pat!==b.pat) d++;
+  if(a.pat===b.pat && a.pat!=='solid' && a.patColor!==b.patColor) d++;
+  if(a.eye!==b.eye) d++;
+  return d;
+}
+// клон «своего» кота с одним заметным отличием
+function makeImpostor(own){
+  const c = {...own};
+  const roll = Math.random();
+  if(roll<0.45){ // другой окрас
+    let nb; do{ nb=Math.floor(Math.random()*BASES.length); }while(nb===c.base || Math.abs(LUM[nb]-LUM[c.base])<0.12);
+    c.base=nb; if(c.pat!=='solid' && Math.abs(LUM[c.patColor]-LUM[nb])<0.2) c.patColor=pickPatColor(nb);
+  } else if(roll<0.85){ // другой узор
+    let np; do{ np=rnd(PATS); }while(np===c.pat);
+    c.pat=np; c.patColor = np==='solid' ? c.base : pickPatColor(c.base);
+  } else { // другие глаза
+    let ne; do{ ne=Math.floor(Math.random()*EYES.length); }while(ne===c.eye);
+    c.eye=ne;
+  }
+  return c;
+}
+
+// спрайт 16×12, смотрит влево
+const TAIL_A=[[13,4],[14,3],[14,2]], TAIL_B=[[13,4],[14,4],[15,3]];
+const PAT_PIX={
+  solid:[],
+  tabby:[[6,5],[6,6],[8,5],[8,6],[10,5],[10,6],[12,5],[12,6],[2,2],[3,2]],
+  patch:[[8,5],[9,5],[10,5],[8,6],[9,6],[10,6],[9,7],[3,2],[4,2],[4,3]],
+  socks:[], tailtip:[]
+};
+let frameEyes=[]; // для ночного свечения глаз
+function drawCat(ctx,cat,x,y,ps,step,flip,recordEyes){
+  const px=(cx,cy,c)=>{ if(flip) cx=15-cx; ctx.fillStyle=c; ctx.fillRect(x+cx*ps,y+cy*ps,ps,ps); };
+  const base=BASES[cat.base], pc=BASES[cat.patColor];
+  const tail = (step===1)?TAIL_B:TAIL_A;
+  const legsX = step==null ? [5,12] : (step===1 ? [6,11] : [5,12]);
+  // тело и голова
+  for(let cx=4;cx<=13;cx++) for(let cy=5;cy<=9;cy++) px(cx,cy,base);
+  for(let cx=0;cx<=4;cx++) for(let cy=2;cy<=6;cy++) px(cx,cy,base);
+  px(0,1,base); px(4,1,base);                       // уши
+  tail.forEach(p=>px(p[0],p[1],base));              // хвост
+  const legCol = cat.pat==='socks' ? pc : base;
+  legsX.forEach(lx=>{ px(lx,10,legCol); px(lx,11,legCol); });
+  // узор
+  PAT_PIX[cat.pat].forEach(p=>px(p[0],p[1],pc));
+  if(cat.pat==='tailtip'){ px(tail[1][0],tail[1][1],pc); px(tail[2][0],tail[2][1],pc); px(0,1,pc); px(4,1,pc); }
+  if(cat.pat==='socks'){ px(tail[2][0],tail[2][1],pc); }
+  // морда
+  px(1,4,EYES[cat.eye]); px(2,4,EYES[cat.eye]);
+  px(0,5,'#d97b8a');
+  if(recordEyes){
+    const ex = flip? [15-1,15-2] : [1,2];
+    frameEyes.push([x+ex[0]*ps,y+4*ps,ps,EYES[cat.eye]],[x+ex[1]*ps,y+4*ps,ps,EYES[cat.eye]]);
+  }
+}
+function portraitEl(cat,name){
+  const d=document.createElement('div'); d.className='port';
+  const c=document.createElement('canvas'); c.width=72; c.height=54;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#3a3450'; ctx.fillRect(0,0,72,54);
+  drawCat(ctx,cat,4,3,4,null,false,false);
+  d.appendChild(c);
+  const s=document.createElement('span'); s.textContent=name; d.appendChild(s);
+  return d;
+}
+
+// ————— уровни —————
+const LEVELS=[
+  {name:'1·НОВЫЙ ДОМ', env:'day', own:2, total:8,  speed:34, time:6.0, tricky:0,    cheat:true,
+   story:'Вы переехали на Мадейру — дом с зелёной дверью, океан за окном. Коты ещё осваиваются, и вы тоже: подсказка с вашими котами будет над экраном.'},
+  {name:'2·КОТЫ РАЙОНА', env:'day', own:2, total:10, speed:40, time:5.0, tricky:0.15,
+   story:'Соседские коты прознали, что у вас щедро насыпают корм. Подсказки больше нет — только память. Запомните своих!'},
+  {name:'3·СИЕСТА ВСЁ', env:'dusk', own:3, total:12, speed:46, time:4.2, tricky:0.35,
+   story:'Вечереет, у двери очередь. У вас теперь три кота, а среди чужих попадаются подозрительно похожие на ваших.'},
+  {name:'4·ДОЖДЬ', env:'rain', own:3, total:14, speed:52, time:3.6, tricky:0.5,
+   story:'Атлантика прислала ливень. К вашей двери бегут все коты улицы — решайте быстрее.'},
+  {name:'5·НОЧЬ', env:'night', own:3, total:14, speed:56, time:3.4, tricky:0.6,
+   story:'Фонарь у двери да кошачьи глаза — больше света нет. Узнаете своих в темноте?'},
+  {name:'ПОТОК', env:'cycle', own:3, total:Infinity, speed:44, time:4.2, tricky:0.3, endless:true,
+   story:'Коты идут и идут, погода меняется. Сколько продержитесь на девяти жизнях?'}
+];
+const ENV_CYCLE=['day','dusk','rain','night'];
+
+// ————— состояние —————
+const cv=$('cv'), ctx=cv.getContext('2d');
+const W=160,H=150,GROUND=120,SIT_X=58,PS=2;
+let G=null; // текущий забег
+
+function newRun(levelIdx){
+  const owns=[]; const names=[...NAMES];
+  for(let i=0;i<3;i++){
+    let c; let guard=0;
+    do{ c=makeCat(); guard++; }while(guard<50 && owns.some(o=>catDiff(o,c)<2));
+    c.name=names.splice(Math.floor(Math.random()*names.length),1)[0];
+    owns.push(c);
+  }
+  G={ owns, level:levelIdx, score:0, lives:9, combo:0,
+      served:0, correct:0, cat:null, phase:'idle', timer:0, envT:0,
+      levelStartScore:0, shake:0, doorOpen:0 };
+}
+function lv(){ return LEVELS[G.level]; }
+function ownCatsForLevel(){ return G.owns.slice(0, lv().own); }
+
+// сложность в «Потоке»
+function curSpeed(){ const l=lv(); return l.endless ? l.speed + Math.floor(G.served/5)*3 : l.speed; }
+function curTime(){  const l=lv(); return l.endless ? Math.max(2.0, l.time*Math.pow(0.96,Math.floor(G.served/5))) : l.time; }
+function curTricky(){const l=lv(); return l.endless ? Math.min(0.65, l.tricky + G.served*0.005) : l.tricky; }
+function curEnv(){   const l=lv(); return l.env==='cycle' ? ENV_CYCLE[Math.floor(G.served/10)%4] : l.env; }
+
+// ————— HUD —————
+function updHud(){
+  $('lvName').textContent = lv().name;
+  $('score').textContent  = G.score;
+  $('lives').textContent  = '♥'+G.lives;
+  const c=$('combo');
+  if(G.combo>=2){ c.textContent='x'+Math.min(G.combo,5); c.classList.add('show'); }
+  else c.classList.remove('show');
+}
+function updCheat(force){
+  const el=$('cheat'); el.innerHTML='';
+  ownCatsForLevel().forEach(c=>el.appendChild(portraitEl(c,c.name)));
+  el.classList.toggle('on', !!(force || lv().cheat));
+}
+let toastTm=null;
+function toast(msg,bad){
+  const t=$('toast'); t.textContent=msg;
+  t.classList.toggle('bad',!!bad); t.classList.add('show');
+  clearTimeout(toastTm); toastTm=setTimeout(()=>t.classList.remove('show'),1400);
+}
+
+// ————— экраны —————
+function showScreen(html){ const s=$('screen'); s.innerHTML=html; s.classList.remove('hide'); setControls(false); }
+function hideScreen(){ $('screen').classList.add('hide'); }
+function setControls(on){ $('btnIn').disabled=!on; $('btnOut').disabled=!on; }
+
+function titleScreen(){
+  G=null;
+  $('lvName').textContent='КОТЫ МАДЕЙРЫ'; $('score').textContent=store.get('best',0); $('lives').textContent='♥9';
+  $('cheat').classList.remove('on');
+  const unlocked=Math.min(store.get('unlocked',0), LEVELS.length-1);
+  showScreen(`
+    <h1>КОТЫ МАДЕЙРЫ</h1>
+    <p class="dim">Впусти своих — прогони чужих</p>
+    <p class="dim">Лучший счёт: ${store.get('best',0)}</p>
+    <button class="btn gold" id="bPlay">ИГРАТЬ · УР.${Math.min(unlocked,4)+1}</button>
+    ${unlocked>0?'<button class="btn" id="bNew">С НАЧАЛА</button>':''}
+    ${store.get('unlocked',0)>=5?'<button class="btn" id="bFlow">ПОТОК</button>':''}
+  `);
+  $('bPlay').onclick=()=>{ newRun(Math.min(unlocked,4)); storyScreen(); };
+  const bn=$('bNew');  if(bn) bn.onclick=()=>{ newRun(0); storyScreen(); };
+  const bf=$('bFlow'); if(bf) bf.onclick=()=>{ newRun(5); storyScreen(); };
+}
+function storyScreen(){
+  updHud(); updCheat(false);
+  const ports = ownCatsForLevel().map(()=>'').join('');
+  showScreen(`
+    <h2>${lv().name}</h2>
+    <p>${lv().story}</p>
+    <p class="dim">Ваши коты — запомните их:</p>
+    <div class="ports" id="sPorts"></div>
+    <button class="btn gold" id="bGo">ПОЕХАЛИ</button>
+  `);
+  const box=$('sPorts');
+  ownCatsForLevel().forEach(c=>box.appendChild(portraitEl(c,c.name)));
+  $('bGo').onclick=startLevel;
+}
+function startLevel(){
+  G.served=0; G.correct=0; G.combo=0; G.cat=null; G.phase='idle';
+  G.levelStartScore=G.score; G.doorOpen=0;
+  hideScreen(); updHud(); updCheat(false); setControls(true);
+  setTimeout(spawnNext, 500);
+}
+function levelComplete(){
+  sndGood();
+  if(G.score>store.get('best',0)) store.set('best',G.score);
+  const next=G.level+1;
+  store.set('unlocked', Math.max(store.get('unlocked',0), next));
+  if(G.level===4){
+    showScreen(`
+      <h2>МАДЕЙРА — ДОМ!</h2>
+      <p>Вы освоились. Свои — дома, чужие уважительно обходят вашу дверь. Впереди — бесконечный «Поток».</p>
+      <p class="dim">Счёт: ${G.score} · верных ${G.correct}/${lv().total}</p>
+      <button class="btn gold" id="bNext">В ПОТОК</button>
+      <button class="btn" id="bMenu">В МЕНЮ</button>
+    `);
+    $('bNext').onclick=()=>{ G.level=5; storyScreen(); };
+    $('bMenu').onclick=titleScreen;
+  } else {
+    showScreen(`
+      <h2>УРОВЕНЬ ПРОЙДЕН!</h2>
+      <p class="dim">Верных решений: ${G.correct} из ${lv().total}<br>Счёт: ${G.score} · Жизни: ♥${G.lives}</p>
+      <button class="btn gold" id="bNext">ДАЛЬШЕ</button>
+    `);
+    $('bNext').onclick=()=>{ G.level=next; storyScreen(); };
+  }
+}
+function gameOver(){
+  if(G.score>store.get('best',0)) store.set('best',G.score);
+  showScreen(`
+    <h2>ДЕВЯТЬ ЖИЗНЕЙ — ВСЁ</h2>
+    <p>Дом полон чужих котов, корм кончился, ваши обиженно сидят на заборе.</p>
+    <p class="dim">Счёт: ${G.score}</p>
+    <button class="btn gold" id="bRetry">ЕЩЁ РАЗ</button>
+    <button class="btn" id="bMenu">В МЕНЮ</button>
+  `);
+  $('bRetry').onclick=()=>{ G.lives=9; G.score=G.levelStartScore; storyScreen(); };
+  $('bMenu').onclick=titleScreen;
+}
+
+// ————— игровой цикл —————
+function spawnNext(){
+  if(!G || G.phase==='dead') return;
+  const l=lv();
+  if(!l.endless && G.served>=l.total) return levelComplete();
+  const owns=ownCatsForLevel();
+  let cat;
+  const firstOfRun = (G.level===0 && G.served===0);
+  if(firstOfRun || Math.random()<0.45){
+    cat={...rnd(owns), isOwn:true};
+  } else if(Math.random()<curTricky()){
+    cat={...makeImpostor(rnd(owns)), isOwn:false, name:null};
+  } else {
+    let c,guard=0;
+    do{ c=makeCat(); guard++; }while(guard<60 && owns.some(o=>catDiff(o,c)<2));
+    cat={...c,isOwn:false,name:null};
+  }
+  cat.x=170; cat.y=GROUND-24;
+  G.cat=cat; G.phase='walk'; G.timer=curTime();
+}
+function resolve(action){ // 'in' | 'out' | null(таймаут)
+  if(!G.cat || (G.phase!=='walk' && G.phase!=='sit')) return;
+  const c=G.cat, l=lv();
+  let correct, entered;
+  if(action===null){ correct=false; entered=!c.isOwn; }
+  else { correct = (action==='in')===c.isOwn; entered=(action==='in'); }
+  G.served++;
+  if(correct){
+    G.combo++; G.correct++;
+    const pts=10*Math.min(G.combo,5);
+    G.score+=pts;
+    if(c.isOwn){ toast(`${c.name} дома! +${pts}`); sndMeow(); }
+    else       { toast(`Кыш, чужак! +${pts}`); sndGood(); }
+  } else {
+    G.combo=0; G.lives--; G.shake=6; sndBad();
+    if(action===null) toast(c.isOwn?`${c.name} не дождался и ушёл… −♥`:'Прошмыгнул, пока вы думали! −♥', true);
+    else if(entered)  toast('Это чужой! Съел весь корм… −♥', true);
+    else              toast(`Вы прогнали ${c.name}! Обида… −♥`, true);
+  }
+  updHud();
+  G.phase = entered ? 'leaveIn' : 'leaveOut';
+  if(entered) G.doorOpen=1;
+  if(G.lives<=0){ G.phase='dead'; setTimeout(gameOver,900); return; }
+}
+function afterLeave(){
+  G.cat=null; G.phase='idle'; G.doorOpen=0;
+  setTimeout(spawnNext, 400);
+}
+
+// ————— отрисовка —————
+const SKY={ day:['#8fd3ea','#a5deef','#c0eaf5'], dusk:['#e8845e','#f2a65e','#f5c37a'],
+            rain:['#8d9aa8','#9daab6','#adb9c4'], night:['#141a33','#1a2140','#222a4d'] };
+const STARS=[[70,6],[95,14],[120,4],[140,18],[85,26],[110,30],[150,9],[64,20],[131,24]];
+function drawScene(t,env){
+  // небо
+  const s=SKY[env];
+  ctx.fillStyle=s[0]; ctx.fillRect(0,0,W,18);
+  ctx.fillStyle=s[1]; ctx.fillRect(0,18,W,16);
+  ctx.fillStyle=s[2]; ctx.fillRect(0,34,W,14);
+  if(env==='night'){ ctx.fillStyle='#e8e4d0'; STARS.forEach(p=>ctx.fillRect(p[0],p[1],1,1)); }
+  if(env==='day'){ ctx.fillStyle='#f5e08a'; ctx.fillRect(128,8,10,10); ctx.fillStyle='#f9edb2'; ctx.fillRect(130,10,6,6); }
+  // океан и гора
+  ctx.fillStyle= env==='night'?'#16294a':'#2a7096'; ctx.fillRect(0,48,W,14);
+  ctx.fillStyle= env==='night'?'#1b3055':'#3585ad'; ctx.fillRect(0,48,W,4);
+  ctx.fillStyle= env==='night'?'#20304a':'#4e9b47';
+  ctx.fillRect(96,38,64,10); ctx.fillRect(110,32,40,6); ctx.fillRect(122,27,20,5);
+  // волны
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  for(let i=0;i<6;i++){ const wx=(i*32 + Math.floor(t*8))% (W+20) -10; ctx.fillRect(wx,52+(i%3)*4,8,1); }
+  // терраса
+  ctx.fillStyle='#b7a98f'; ctx.fillRect(0,62,W,88);
+  ctx.fillStyle='#a3957c';
+  for(let gy=66;gy<150;gy+=8) for(let gx=(gy/8)%2?4:0; gx<W; gx+=8) ctx.fillRect(gx,gy,4,1);
+  // дом
+  ctx.fillStyle='#f2e7d5'; ctx.fillRect(0,30,54,90);   // стена
+  ctx.fillStyle='#e5d8c2'; ctx.fillRect(50,30,4,90);
+  ctx.fillStyle='#c4623b'; ctx.fillRect(0,22,58,10);   // крыша
+  ctx.fillStyle='#a34c2c'; for(let rx=0;rx<58;rx+=6) ctx.fillRect(rx,28,3,4);
+  // дверь (зелёная) / проём
+  if(G && G.doorOpen){ ctx.fillStyle='#241d18'; ctx.fillRect(14,70,26,50); }
+  else{
+    ctx.fillStyle='#3e7d38'; ctx.fillRect(14,70,26,50);
+    ctx.fillStyle='#356b30'; ctx.fillRect(16,74,9,20); ctx.fillRect(29,74,9,20);
+    ctx.fillRect(16,98,9,18); ctx.fillRect(29,98,9,18);
+    ctx.fillStyle='#e8c04c'; ctx.fillRect(35,96,2,3); // ручка
+  }
+  ctx.fillStyle='#8a6f4d'; ctx.fillRect(12,68,2,52); ctx.fillRect(40,68,2,52); ctx.fillRect(12,68,30,2); // косяк
+  ctx.fillStyle='#4aa0bf'; for(let ay=72;ay<118;ay+=6){ ctx.fillRect(10,ay,2,3); ctx.fillRect(42,ay,2,3); } // азулежу
+  // фонарь
+  ctx.fillStyle='#3b3630'; ctx.fillRect(46,60,4,3); ctx.fillRect(47,58,2,2);
+  ctx.fillStyle= (env==='night'||env==='dusk')?'#ffd964':'#c9bfa8'; ctx.fillRect(47,61,2,2);
+  // горшок с монстерой
+  ctx.fillStyle='#4e9b47'; ctx.fillRect(140,92,14,10); ctx.fillRect(144,86,8,8); ctx.fillRect(138,96,4,6);
+  ctx.fillStyle='#33702e'; ctx.fillRect(146,90,4,8);
+  ctx.fillStyle='#c4623b'; ctx.fillRect(140,102,14,12); ctx.fillStyle='#a34c2c'; ctx.fillRect(140,102,14,3);
+  // миска у двери
+  ctx.fillStyle='#4aa0bf'; ctx.fillRect(44,116,10,4); ctx.fillStyle='#8a6f4d'; ctx.fillRect(46,115,6,2);
+}
+function drawOverlays(env){
+  if(env==='dusk'){ ctx.fillStyle='rgba(230,110,40,.16)'; ctx.fillRect(0,0,W,H); }
+  if(env==='rain'){ ctx.fillStyle='rgba(90,110,135,.22)'; ctx.fillRect(0,0,W,H); }
+  if(env==='night'){ ctx.fillStyle='rgba(10,10,38,.62)'; ctx.fillRect(0,0,W,H); }
+  if(env==='night'||env==='dusk'){ // свет фонаря
+    ctx.fillStyle='rgba(255,214,100,.14)'; ctx.fillRect(38,54,20,16);
+    ctx.fillStyle='rgba(255,214,100,.08)'; ctx.fillRect(30,52,36,26);
+  }
+  if(env==='night'){ frameEyes.forEach(e=>{ ctx.fillStyle=e[3]; ctx.fillRect(e[0],e[1],e[2],e[2]); }); }
+}
+let rainT=0;
+function drawRain(t){
+  ctx.strokeStyle='rgba(210,225,240,.55)'; ctx.lineWidth=1; ctx.beginPath();
+  for(let i=0;i<34;i++){
+    const rx=((i*37 + Math.floor(t*140))% (W+10))-5;
+    const ry=((i*53 + Math.floor(t*260))% H);
+    ctx.moveTo(rx,ry); ctx.lineTo(rx-2,ry+5);
+  }
+  ctx.stroke();
+}
+
+let last=0, walkFrame=0, walkAcc=0, lastTickSec=99;
+function loop(ts){
+  const dt=Math.min(0.05,(ts-last)/1000||0); last=ts;
+  const t=ts/1000;
+  frameEyes=[];
+  ctx.save();
+  if(G && G.shake>0){ G.shake--; ctx.translate(Math.random()*4-2,Math.random()*2-1); }
+  const env = G ? curEnv() : 'day';
+  drawScene(t,env);
+
+  if(G && G.cat){
+    const c=G.cat;
+    walkAcc+=dt; if(walkAcc>0.12){ walkAcc=0; walkFrame=1-walkFrame; }
+    if(G.phase==='walk'){
+      c.x-=curSpeed()*dt;
+      if(c.x<=SIT_X){ c.x=SIT_X; G.phase='sit'; lastTickSec=99; }
+    } else if(G.phase==='sit'){
+      G.timer-=dt;
+      const sec=Math.ceil(G.timer);
+      if(G.timer<=1.6 && sec<lastTickSec){ lastTickSec=sec; sndTick(); }
+      if(G.timer<=0) resolve(null);
+    } else if(G.phase==='leaveIn'){
+      c.x-=70*dt;
+      if(c.x<26) afterLeave();
+    } else if(G.phase==='leaveOut'){
+      c.x+=140*dt;
+      if(c.x>172) afterLeave();
+    }
+    if(G.cat){
+      const step=(G.phase==='sit')?null:walkFrame;
+      const bob=(G.phase==='sit')?0:(walkFrame?1:0);
+      ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(c.x+6,c.y+24,22,2);
+      drawCat(ctx,c,Math.round(c.x),c.y+bob,PS,step,G.phase==='leaveOut',true);
+      if(G.phase==='sit'){ // таймер
+        const frac=Math.max(0,G.timer/curTime());
+        ctx.fillStyle='#241f31'; ctx.fillRect(c.x+2,c.y-8,28,4);
+        ctx.fillStyle= frac>0.4?'#5fbf4a':(frac>0.2?'#e8c04c':'#e2688a');
+        ctx.fillRect(c.x+3,c.y-7,Math.round(26*frac),2);
+      }
+    }
+  }
+  drawOverlays(env);
+  if(env==='rain') drawRain(t);
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+
+// ————— ввод —————
+function act(a){ if(G && ($('screen').classList.contains('hide'))) resolve(a); }
+$('btnIn').addEventListener('pointerdown', e=>{ e.preventDefault(); act('in'); });
+$('btnOut').addEventListener('pointerdown', e=>{ e.preventDefault(); act('out'); });
+const peek=$('btnPeek');
+function peekOn(e){ e.preventDefault(); if(G) updCheat(true); }
+function peekOff(){ if(G) updCheat(false); }
+peek.addEventListener('pointerdown',peekOn);
+peek.addEventListener('pointerup',peekOff);
+peek.addEventListener('pointercancel',peekOff);
+peek.addEventListener('pointerleave',peekOff);
+let swX=null;
+$('stage').addEventListener('pointerdown', e=>{ swX=e.clientX; });
+$('stage').addEventListener('pointerup', e=>{
+  if(swX==null) return;
+  const dx=e.clientX-swX; swX=null;
+  if(dx<-30) act('in'); else if(dx>30) act('out');
+});
+window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft') act('in');
+  else if(e.key==='ArrowRight') act('out');
+});
+
+// ————— старт —————
+setControls(false);
+if(location.hash==='#test'){ newRun(0); hideScreen(); startLevel(); }
+else titleScreen();
+requestAnimationFrame(loop);
+</script>
