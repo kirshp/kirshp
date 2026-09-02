@@ -220,6 +220,43 @@ function portraitEl(cat,name){
   return d;
 }
 
+// ————— the girl who opens the door —————
+const HAIR='#f0d878', HAIR_D='#d9b95c', SKIN='#f2c9a0';
+const DRESS='#4a7fb5', DRESS_D='#3a6592', SHOE='#8a4b32';
+const GIRL_X=38, GIRL_Y=80;
+function drawGirl(ctx,x,y,ps,pose,wave){
+  const flip = pose==='open';                          // she turns to face the door
+  if(pose==='open') x-=6; else if(pose==='shoo') x+=2; // and steps toward it
+  const px=(cx,cy,c)=>{ if(flip) cx=10-cx; ctx.fillStyle=c; ctx.fillRect(x+cx*ps,y+cy*ps,ps,ps); };
+  const rect=(x0,x1,y0,y1,c)=>{ for(let cx=x0;cx<=x1;cx++) for(let cy=y0;cy<=y1;cy++) px(cx,cy,c); };
+  rect(3,9,1,7,HAIR);                                  // hair
+  px(3,8,HAIR); px(9,8,HAIR); px(3,9,HAIR); px(9,9,HAIR);
+  px(4,2,HAIR_D); px(8,2,HAIR_D);
+  px(4,1,'#e2688a'); px(4,0,'#e2688a');                // flower
+  rect(5,7,3,6,SKIN);                                  // face
+  if(flip){ px(5,4,'#3b3630'); px(5,6,'#d97b8a'); px(7,3,HAIR); px(7,4,HAIR); px(7,5,HAIR); }
+  else    { px(5,4,'#3b3630'); px(7,4,'#3b3630'); px(6,6,'#d97b8a'); }
+  px(6,7,SKIN);                                        // neck
+  rect(4,8,8,10,DRESS);                                // dress
+  rect(3,9,11,13,DRESS); rect(2,10,14,15,DRESS);
+  rect(2,10,15,15,DRESS_D);
+  rect(4,8,8,8,'#5f97c9');                             // collar
+  const armDown=(c)=>{ px(c,9,SKIN); px(c,10,SKIN); px(c,11,SKIN); px(c,12,'#d9a87f'); };
+  const armUp=(c,out)=>{ px(c,9,SKIN); px(out,8,SKIN); px(out,7,SKIN);
+                         px(out,6-wave,SKIN); px(out,5-wave,SKIN); px(out,4-wave,'#d9a87f'); };
+  if(pose==='open'){ armUp(9,10); armDown(2); }        // (mirrored) reaching for the handle
+  else if(pose==='shoo'){ armUp(9,10); armDown(2); }   // waving a stranger off
+  else { armDown(2); armDown(10); }
+  rect(5,5,16,18,SKIN); rect(7,7,16,18,SKIN);          // legs
+  px(4,19,SHOE); px(5,19,SHOE); px(7,19,SHOE); px(8,19,SHOE);
+}
+function girlPose(){
+  if(!G) return 'idle';
+  if(G.phase==='leaveIn') return 'open';
+  if(G.phase==='leaveOut') return 'shoo';
+  return 'idle';
+}
+
 // ————— levels —————
 const LEVELS=[
   {name:'1·NEW HOME', env:'day', own:2, total:8,  speed:34, time:6.0, tricky:0,    cheat:true,
@@ -239,7 +276,7 @@ const ENV_CYCLE=['day','dusk','rain','night'];
 
 // ————— state —————
 const cv=$('cv'), ctx=cv.getContext('2d');
-const W=160,H=150,GROUND=120,SIT_X=58,PS=2;
+const W=160,H=150,GROUND=120,SIT_X=66,PS=2;
 let G=null; // current run
 
 function newRun(levelIdx){
@@ -441,32 +478,35 @@ function drawScene(t,env){
   ctx.fillStyle='#c4623b'; ctx.fillRect(0,22,58,10);   // roof
   ctx.fillStyle='#a34c2c'; for(let rx=0;rx<58;rx+=6) ctx.fillRect(rx,28,3,4);
   // the green door / open doorway
-  if(G && G.doorOpen){ ctx.fillStyle='#241d18'; ctx.fillRect(14,70,26,50); }
+  if(G && G.doorOpen){ ctx.fillStyle='#241d18'; ctx.fillRect(10,70,26,50); }
   else{
-    ctx.fillStyle='#3e7d38'; ctx.fillRect(14,70,26,50);
-    ctx.fillStyle='#356b30'; ctx.fillRect(16,74,9,20); ctx.fillRect(29,74,9,20);
-    ctx.fillRect(16,98,9,18); ctx.fillRect(29,98,9,18);
-    ctx.fillStyle='#e8c04c'; ctx.fillRect(35,96,2,3); // handle
+    ctx.fillStyle='#3e7d38'; ctx.fillRect(10,70,26,50);
+    ctx.fillStyle='#356b30'; ctx.fillRect(12,74,9,20); ctx.fillRect(25,74,9,20);
+    ctx.fillRect(12,98,9,18); ctx.fillRect(25,98,9,18);
+    ctx.fillStyle='#e8c04c'; ctx.fillRect(31,96,2,3); // handle
   }
-  ctx.fillStyle='#8a6f4d'; ctx.fillRect(12,68,2,52); ctx.fillRect(40,68,2,52); ctx.fillRect(12,68,30,2); // frame
-  ctx.fillStyle='#4aa0bf'; for(let ay=72;ay<118;ay+=6){ ctx.fillRect(10,ay,2,3); ctx.fillRect(42,ay,2,3); } // azulejo trim
-  // lantern
-  ctx.fillStyle='#3b3630'; ctx.fillRect(46,60,4,3); ctx.fillRect(47,58,2,2);
-  ctx.fillStyle= (env==='night'||env==='dusk')?'#ffd964':'#c9bfa8'; ctx.fillRect(47,61,2,2);
+  ctx.fillStyle='#8a6f4d'; ctx.fillRect(8,68,2,52); ctx.fillRect(36,68,2,52); ctx.fillRect(8,68,30,2); // frame
+  ctx.fillStyle='#4aa0bf'; for(let ay=72;ay<118;ay+=6){ ctx.fillRect(6,ay,2,3); ctx.fillRect(38,ay,2,3); } // azulejo trim
+  // lantern above the door
+  ctx.fillStyle='#3b3630'; ctx.fillRect(20,60,4,3); ctx.fillRect(21,58,2,2);
+  ctx.fillStyle= (env==='night'||env==='dusk')?'#ffd964':'#c9bfa8'; ctx.fillRect(21,61,2,2);
+  // the girl at the door
+  ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(GIRL_X+6,119,16,2);
+  drawGirl(ctx,GIRL_X,GIRL_Y,PS,girlPose(),walkFrame);
   // potted monstera
   ctx.fillStyle='#4e9b47'; ctx.fillRect(140,92,14,10); ctx.fillRect(144,86,8,8); ctx.fillRect(138,96,4,6);
   ctx.fillStyle='#33702e'; ctx.fillRect(146,90,4,8);
   ctx.fillStyle='#c4623b'; ctx.fillRect(140,102,14,12); ctx.fillStyle='#a34c2c'; ctx.fillRect(140,102,14,3);
-  // food bowl by the door
-  ctx.fillStyle='#4aa0bf'; ctx.fillRect(44,116,10,4); ctx.fillStyle='#8a6f4d'; ctx.fillRect(46,115,6,2);
+  // food bowl by the monstera
+  ctx.fillStyle='#4aa0bf'; ctx.fillRect(124,116,10,4); ctx.fillStyle='#8a6f4d'; ctx.fillRect(126,115,6,2);
 }
 function drawOverlays(env){
   if(env==='dusk'){ ctx.fillStyle='rgba(230,110,40,.16)'; ctx.fillRect(0,0,W,H); }
   if(env==='rain'){ ctx.fillStyle='rgba(90,110,135,.22)'; ctx.fillRect(0,0,W,H); }
   if(env==='night'){ ctx.fillStyle='rgba(10,10,38,.62)'; ctx.fillRect(0,0,W,H); }
   if(env==='night'||env==='dusk'){ // lantern light
-    ctx.fillStyle='rgba(255,214,100,.14)'; ctx.fillRect(38,54,20,16);
-    ctx.fillStyle='rgba(255,214,100,.08)'; ctx.fillRect(30,52,36,26);
+    ctx.fillStyle='rgba(255,214,100,.15)'; ctx.fillRect(12,52,48,26);
+    ctx.fillStyle='rgba(255,214,100,.08)'; ctx.fillRect(4,48,66,44);
   }
   if(env==='night'){ frameEyes.forEach(e=>{ ctx.fillStyle=e[3]; ctx.fillRect(e[0],e[1],e[2],e[2]); }); }
 }
@@ -503,7 +543,7 @@ function loop(ts){
       if(G.timer<=0) resolve(null);
     } else if(G.phase==='leaveIn'){
       c.x-=70*dt;
-      if(c.x<26) afterLeave();
+      if(c.x<14) afterLeave();
     } else if(G.phase==='leaveOut'){
       c.x+=140*dt;
       if(c.x>172) afterLeave();
