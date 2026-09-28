@@ -80,7 +80,7 @@ MENENIUS:
 All in the blood more did and power in earths
 That Henry the duty sumblt Boick's weep prope.
 ```
-Модель побольше на GPU (раздел про Colab) доходит до val loss ≈ 1.5, и текст становится заметно связнее.
+Модель побольше на GPU (раздел про Colab) по опыту nanoGPT доходит до val loss ≈ 1.5, и текст становится заметно связнее.
 
 ## 3. Карта кода
 
