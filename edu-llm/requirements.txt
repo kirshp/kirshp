@@ -1,0 +1,5 @@
+# Для CPU-only установки torch (быстрее и легче):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Для GPU (CUDA) — команда с https://pytorch.org/get-started/locally/
+torch>=2.1
+numpy>=1.24
