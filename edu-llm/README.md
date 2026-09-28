@@ -62,8 +62,25 @@ python sample.py --prompt "Мой дядя" --temperature 0.7
 шаг   500 | train loss 2.154 | val loss 2.183
 шаг  1000 | train loss 1.845 | val loss 1.968
 шаг  1500 | train loss 1.676 | val loss 1.840
-...
+шаг  2000 | train loss 1.580 | val loss 1.748
+шаг  2500 | train loss 1.520 | val loss 1.708
+шаг  3000 | train loss 1.510 | val loss 1.695     (≈19 мин на 4 ядрах)
 ```
+
+Что после этого выдаёт `python sample.py --seed 1`: слова и форма пьесы уже есть, смысла пока нет.
+```
+Become not for of a prebock the backen and pace,
+It the found the good in that be your with bear,
+For see to him die that before the say away.
+
+MARCIUS:
+Or grace hope on what thou, and he short!
+
+MENENIUS:
+All in the blood more did and power in earths
+That Henry the duty sumblt Boick's weep prope.
+```
+Модель побольше на GPU (раздел про Colab) доходит до val loss ≈ 1.5, и текст становится заметно связнее.
 
 ## 3. Карта кода
 
